@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Jump</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f7f7f7;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+        }
+
+
+        .game-container {
+            position: relative;
+            width: 90%; /* Responsive width */
+            max-width: 800px; /* Max width for larger screens */
+            background-color: #fff;
+            border: 4px solid #555;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+
+        canvas {
+            background-color: #e0f7fa; /* Light blue sky */
+            display: block;
+            border: 2px solid #aaa;
+            border-radius: 8px;
+            width: 100%; /* Canvas fills its container */
+            height: 200px; /* Fixed height for game area */
+            margin-bottom: 20px;
+        }
+
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+
+        .score-display, .message-box {
+            background-color: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+
+        .message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 100;
+            border: 2px solid #555;
+            display: none; /* Hidden by default */
+        }
+
+
+        .message-box h2 {
+            margin-top: 0;
+            color: #e74c3c;
+            font-size: 1.8em;
+        }
+
+
+        .message-box p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+
+        .message-box button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+
+        .message-box button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+
+        .message-box button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+
+        @media (max-width: 600px) {
+            .game-container {
+                width: 95%;
+                padding: 15px;
+            }
+            canvas {
+                height: 180px;
+            }
+            .game-info {
+                font-size: 1em;
+            }
+            .message-box {
+                padding: 20px;
+            }
+            .message-box h2 {
+                font-size: 1.5em;
+            }
+            .message-box button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-info">
+            <div class="score-display">Score: <span id="score">0</span></div>
+            <div class="score-display">High Score: <span id="high-score">0</span></div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="messageBox" class="message-box">
+            <h2 id="messageTitle">Game Over!</h2>
+            <p id="messageText">Your final score was: <span id="finalScore">0</span></p>
+            <button id="restartButton">Play Again</button>
+        </div>
+    </div>
+
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+
+        // Get score and message elements
+        const scoreDisplay = document.getElementById('score');
+        const highScoreDisplay = document.getElementById('high-score');
+        const messageBox = document.getElementById('messageBox');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageText = document.getElementById('messageText');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const restartButton = document.getElementById('restartButton');
+
+
+        // Game variables
+        let dinosaur = {
+            x: 50,
+            y: 150, // Initial y position (ground level)
+            width: 40,
+            height: 50,
+            velocityY: 0,
+            gravity: 0.6,
+            jumpStrength: -10,
+            isJumping: false,
+            image: new Image()
+        };
+
+
+        let cacti = [];
+        let score = 0;
+        let highScore = localStorage.getItem('dinoHighScore') || 0;
+        let gameOver = false;
+        let frame = 0;
+        let gameSpeed = 3; // Initial speed
+
+
+        // --- Embedded Images as Data URIs ---
+        // Dinosaur image (a simple green rectangle SVG)
+        const dinoImageURI = 'data:image/svg+xml;base64,' + btoa('<svg width="40" height="50" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="50" fill="#8bc34a" rx="5" ry="5"/><circle cx="30" cy="15" r="5" fill="#689f38"/><circle cx="10" cy="15" r="5" fill="#689f38"/><rect x="10" y="30" width="20" height="10" fill="#689f38" rx="2" ry="2"/></svg>');
+        dinosaur.image.src = dinoImageURI;
+
+
+        // Cactus image (a simple green cactus-like SVG)
+        const cactusImageURI = 'data:image/svg+xml;base64,' + btoa('<svg width="20" height="40" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="0" width="6" height="40" fill="#4caf50" rx="3" ry="3"/><rect x="0" y="15" width="10" height="6" fill="#4caf50" rx="3" ry="3"/><rect x="10" y="25" width="10" height="6" fill="#4caf50" rx="3" ry="3"/></svg>');
+        const cactusImage = new Image();
+        cactusImage.src = cactusImageURI;
+        // --- End Embedded Images ---
+
+
+        // Update high score display
+        highScoreDisplay.textContent = highScore;
+
+
+        // Resize canvas on window resize
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth; // Set canvas drawing buffer to its CSS width
+            // Redraw everything if needed, though for this simple game, it's handled by the game loop
+        }
+
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Initial resize
+
+
+        // Draw dinosaur
+        function drawDinosaur() {
+            ctx.drawImage(dinosaur.image, dinosaur.x, dinosaur.y, dinosaur.width, dinosaur.height);
+        }
+
+
+        // Draw cactus
+        function drawCactus(cactus) {
+            ctx.drawImage(cactusImage, cactus.x, cactus.y, cactus.width, cactus.height);
+        }
+
+
+        // Generate new cactus
+        function generateCactus() {
+            const cactusWidth = 20 + Math.random() * 10; // Random width
+            const cactusHeight = 30 + Math.random() * 20; // Random height
+            cacti.push({
+                x: canvas.width,
+                y: canvas.height - cactusHeight - 10, // Position on the ground
+                width: cactusWidth,
+                height: cactusHeight
+            });
+        }
+
+
+        // Update game state
+        function update() {
+            if (gameOver) return;
+
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+            // Update dinosaur position
+            dinosaur.velocityY += dinosaur.gravity;
+            dinosaur.y += dinosaur.velocityY;
+
+
+            // Prevent dinosaur from falling through the ground
+            const groundLevel = canvas.height - dinosaur.height - 10; // 10px above bottom for ground line
+            if (dinosaur.y >= groundLevel) {
+                dinosaur.y = groundLevel;
+                dinosaur.velocityY = 0;
+                dinosaur.isJumping = false;
+            }
+
+
+            // Draw ground line
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 10);
+            ctx.lineTo(canvas.width, canvas.height - 10);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+
+            // Update cacti
+            for (let i = 0; i < cacti.length; i++) {
+                cacti[i].x -= gameSpeed;
+                drawCactus(cacti[i]);
+
+
+                // Collision detection
+                if (
+                    dinosaur.x < cacti[i].x + cacti[i].width &&
+                    dinosaur.x + dinosaur.width > cacti[i].x &&
+                    dinosaur.y < cacti[i].y + cacti[i].height &&
+                    dinosaur.y + dinosaur.height > cacti[i].y
+                ) {
+                    endGame();
+                    return; // Stop updating after collision
+                }
+            }
+
+
+            // Remove off-screen cacti
+            cacti = cacti.filter(cactus => cactus.x + cactus.width > 0);
+
+
+            // Generate new cactus periodically
+            frame++;
+            if (frame % 150 === 0) { // Adjust for cactus frequency
+                generateCactus();
+            }
+
+
+            // Increase score and game speed
+            score++;
+            scoreDisplay.textContent = Math.floor(score / 10); // Display score in simpler units
+            if (score % 500 === 0) { // Increase speed every 500 frames
+                gameSpeed += 0.5;
+            }
+
+
+            drawDinosaur();
+
+
+            requestAnimationFrame(update);
+        }
+
+
+        // Handle jump
+        function jump() {
+            if (!dinosaur.isJumping && !gameOver) {
+                dinosaur.velocityY = dinosaur.jumpStrength;
+                dinosaur.isJumping = true;
+            } else if (gameOver) {
+                // If game is over, jump acts as restart
+                resetGame();
+            }
+        }
+
+
+        // Event listener for spacebar or click
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                jump();
+            }
+        });
+        canvas.addEventListener('click', jump); // Allow click to jump on mobile
+
+
+        // End game function
+        function endGame() {
+            gameOver = true;
+            if (Math.floor(score / 10) > highScore) {
+                highScore = Math.floor(score / 10);
+                localStorage.setItem('dinoHighScore', highScore);
+                highScoreDisplay.textContent = highScore;
+                messageTitle.textContent = "New High Score!";
+            } else {
+                messageTitle.textContent = "Game Over!";
+            }
+            finalScoreDisplay.textContent = Math.floor(score / 10);
+            messageBox.style.display = 'block';
+        }
+
+
+        // Reset game function
+        function resetGame() {
+            gameOver = false;
+            dinosaur.y = 150;
+            dinosaur.velocityY = 0;
+            dinosaur.isJumping = false;
+            cacti = [];
+            score = 0;
+            frame = 0;
+            gameSpeed = 3;
+            scoreDisplay.textContent = 0;
+            messageBox.style.display = 'none';
+            requestAnimationFrame(update); // Start the game loop again
+        }
+
+
+        // Restart button listener
+        restartButton.addEventListener('click', resetGame);
+
+
+        // Start the game loop on window load
+        window.onload = function () {
+            requestAnimationFrame(update);
+        };
+    </script>
+</body>
+</html>
