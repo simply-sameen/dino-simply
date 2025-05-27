@@ -99,7 +99,7 @@
 
         /* Game element colors (drawn by JS) */
         /* Player (stickman) parts */
-        .player-color { color: #3b82f6; } /* blue-500 */
+        .player-color { color: #3b82f6; } /* blue-500 (not directly used for stickman, but for conceptual player) */
         .player-sliding-color { color: #10b981; } /* emerald-500 */
         .train-color { color: #ef4444; } /* red-500 */
         .bridge-color { color: #9ca3af; } /* gray-400 */
@@ -197,6 +197,7 @@
                 this.isSliding = false;
                 this.slideTimer = 0;
                 this.originalHeight = this.height;
+                this.prevY = this.y; // Store previous Y for collision direction
 
                 // Stickman specific dimensions relative to player width/height
                 this.headRadius = this.width / 3;
@@ -206,6 +207,8 @@
             }
 
             update() {
+                this.prevY = this.y; // Update previous Y at the start of update cycle
+
                 if (this.isSliding) {
                     this.slideTimer--;
                     if (this.slideTimer <= 0) {
@@ -496,19 +499,26 @@
 
                 if (checkCollision(playerBounds, obstacleBounds)) {
                     if (obstacle.type === OBSTACLE_TRAIN) {
-                        // Player must jump over or run on top of train
                         const playerBottom = playerBounds.y + playerBounds.height;
                         const obstacleTop = obstacleBounds.y;
-                        const collisionTolerance = 5; // Pixels to consider "on top"
+                        const collisionTolerance = 8; // Vertical tolerance for landing on top
 
-                        if (player.velY >= 0 && playerBottom >= obstacleTop && playerBottom <= obstacleTop + collisionTolerance &&
-                            playerBounds.x + playerBounds.width > obstacleBounds.x + 5 && playerBounds.x < obstacleBounds.x + obstacleBounds.width - 5) {
-                            // Player is falling and landed on top of the train, and is horizontally within the train
-                            player.y = obstacleTop - playerBounds.height; // Snap to top of train
-                            player.velY = 0; // Stop vertical movement
-                            player.isJumping = false; // Player is no longer jumping
+                        // Check if player was above the train in the previous frame and is now hitting its top
+                        const wasAboveLastFrame = player.prevY + player.height <= obstacleTop + collisionTolerance;
+                        const isFalling = player.velY >= 0;
+                        const isHorizontallyAligned = (
+                            playerBounds.x + playerBounds.width > obstacleBounds.x + 5 && // Player is past train's left edge (horizontally)
+                            playerBounds.x < obstacleBounds.x + obstacleBounds.width - 5 // Player is before train's right edge (horizontally)
+                        );
+
+                        if (isFalling && wasAboveLastFrame && isHorizontallyAligned) {
+                            // Player is landing on top of the train
+                            player.y = obstacleTop - playerBounds.height; // Snap to top
+                            player.velY = 0;
+                            player.isJumping = false;
                         } else {
-                            // Player hit the side of the train (not on top, or hit while jumping/sliding incorrectly)
+                            // If it's a collision, but NOT a top landing, then it's a fatal hit (side, front, falling through)
+                            // This condition ensures game over only triggers if player hits side/front, not when jumping off.
                             showGameOver();
                         }
                     } else if (obstacle.type === OBSTACLE_BRIDGE) {
