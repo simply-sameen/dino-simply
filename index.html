@@ -9,7 +9,7 @@
         /* Custom CSS for game elements and specific styling not easily done with Tailwind */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c; /* Dark background */
+            background-color: #1f2937; /* Slightly lighter dark background */
             display: flex;
             flex-direction: column; /* Arrange items vertically */
             justify-content: center;
@@ -21,23 +21,23 @@
 
         #gameContainer {
             position: relative;
-            background-color: #334155; /* Darker background for game area */
-            border-radius: 1rem; /* rounded-2xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            background-color: #4b5563; /* Medium dark background for game area */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.2), 0 5px 10px -5px rgba(0, 0, 0, 0.1); /* Stronger shadow */
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1rem; /* Space between game and button */
+            margin-bottom: 1.5rem; /* More space between game and button */
+            border: 2px solid #6b7280; /* Subtle border */
         }
 
         canvas {
             display: block;
-            background-color: #64748b; /* Sky blue for game background */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06); /* inset shadow */
-            /* Canvas logical dimensions are set in JS, CSS handles visual scaling */
+            background-color: #7dd3fc; /* Lighter sky blue for game background */
+            border-radius: 1rem; /* Rounded corners for canvas */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* inset shadow */
             width: 100%;
             height: 100%;
         }
@@ -48,7 +48,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8); /* Slightly darker overlay */
             color: white;
             display: flex;
             flex-direction: column;
@@ -56,43 +56,45 @@
             align-items: center;
             text-align: center;
             z-index: 10;
-            border-radius: 1rem;
+            border-radius: 1.5rem; /* Match container border-radius */
             display: none; /* Hidden by default */
         }
 
         #gameOverOverlay h2 {
-            font-size: 2.5rem; /* text-5xl */
+            font-size: 3rem; /* Larger text */
             font-weight: bold;
-            color: #ef4444; /* red-500 */
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #f87171; /* Redder tone */
+            margin-bottom: 1.5rem;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
         }
 
         #gameOverOverlay p {
-            font-size: 1.25rem; /* text-xl */
-            margin-bottom: 2rem;
+            font-size: 1.5rem; /* Larger text */
+            margin-bottom: 2.5rem;
         }
 
         .action-button {
-            padding: 0.75rem 2rem;
-            background-color: #22c55e; /* green-500 */
-            color: white;
+            padding: 0.85rem 2.5rem; /* Slightly larger padding */
+            background-color: #4ade80; /* Brighter green */
+            color: #1f2937; /* Dark text for contrast */
             border: none;
-            border-radius: 0.5rem; /* rounded-lg */
-            font-size: 1.125rem; /* text-lg */
+            border-radius: 0.75rem; /* More rounded */
+            font-size: 1.25rem; /* Larger font */
+            font-weight: 600; /* Semi-bold */
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.2), 0 3px 6px -2px rgba(0, 0, 0, 0.1);
         }
 
         .action-button:hover {
-            background-color: #16a34a; /* green-600 */
-            transform: translateY(-2px);
+            background-color: #22c55e; /* Darker green on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -4px rgba(0, 0, 0, 0.15);
         }
 
         .action-button:active {
             transform: translateY(0);
-            box-shadow: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         /* Game element colors (drawn by JS) */
@@ -101,10 +103,10 @@
         .player-sliding-color { color: #10b981; } /* emerald-500 */
         .train-color { color: #ef4444; } /* red-500 */
         .bridge-color { color: #9ca3af; } /* gray-400 */
-        .patroller-color { color: #facc15; } /* yellow-400 */
-        .ground-color { color: #4ade80; } /* green-400 */
-        .sky-color { color: #64748b; } /* sky blue-500 */
+        .ground-color { color: #22c55e; } /* green-500 - brighter ground */
+        .sky-color { color: #7dd3fc; } /* sky blue-300 */
         .text-color { color: #ffffff; } /* white */
+        .stickman-color { color: #000000; } /* Black for stickman outline/fill */
     </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -154,9 +156,6 @@
         const GRAVITY = 0.6;
         const SLIDE_DURATION = 30; // Frames for sliding
 
-        const PATROLLER_SPEED_FACTOR = 0.8; // Patroller is slower than player, but relentless
-        const PATROLLER_START_OFFSET = -200; // Patroller starts behind player (relative to screen left edge)
-
         // Obstacle Types
         const OBSTACLE_TRAIN = 0;
         const OBSTACLE_BRIDGE = 1;
@@ -166,19 +165,17 @@
         const LEVEL_SPEED_INCREASE = 0.5; // How much faster each new level gets
 
         // Colors (for drawing simple shapes)
-        const PLAYER_COLOR = '#3b82f6'; // blue-500
+        const PLAYER_COLOR = '#3b82f6'; // blue-500 (not directly used for stickman, but for conceptual player)
         const PLAYER_SLIDING_COLOR = '#10b981'; // emerald-500
         const TRAIN_COLOR = '#ef4444'; // red-500
         const BRIDGE_COLOR = '#9ca3af'; // gray-400
-        const PATROLLER_COLOR = '#facc15'; // yellow-400
-        const GROUND_COLOR = '#4ade80'; // green-400
-        const SKY_COLOR = '#64748b'; // sky blue-500 (game background)
+        const GROUND_COLOR = '#22c55e'; // green-500 - brighter ground
+        const SKY_COLOR = '#7dd3fc'; // sky blue-300 (game background)
         const TEXT_COLOR = '#ffffff'; // white
         const STICKMAN_COLOR = '#000000'; // Black for stickman outline/fill
 
         // --- Game State Variables ---
         let player;
-        let patroller;
         let obstacles = [];
         let score = 0;
         let distanceRun = 0;
@@ -249,7 +246,7 @@
 
             draw() {
                 ctx.strokeStyle = STICKMAN_COLOR;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3; // Bolder lines for stickman
                 ctx.fillStyle = STICKMAN_COLOR;
 
                 const centerX = this.x + this.width / 2;
@@ -261,7 +258,7 @@
                 ctx.beginPath();
                 ctx.arc(centerX, headY, this.headRadius, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.fill(); // Fill head for solid look
+                // ctx.fill(); // Optional: fill head for solid look
 
                 // Body
                 ctx.beginPath();
@@ -303,11 +300,11 @@
                 this.type = type;
                 this.x = x;
                 if (this.type === OBSTACLE_TRAIN) {
-                    this.width = randomRange(80, 150); // Variable train length
+                    this.width = randomRange(100, 200); // Variable train length, slightly longer
                     this.height = 70; // Height of the train body
                     this.y = GROUND_Y - this.height;
                 } else if (this.type === OBSTACLE_BRIDGE) {
-                    this.width = randomRange(100, 180); // Variable bridge length
+                    this.width = randomRange(120, 220); // Variable bridge length, slightly longer
                     this.height = 40; // Height of the bridge structure
                     this.y = GROUND_Y - 90; // Y position for the top of the bridge/overhang
                 }
@@ -320,22 +317,28 @@
             draw() {
                 ctx.fillStyle = this.type === OBSTACLE_TRAIN ? TRAIN_COLOR : BRIDGE_COLOR;
                 ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.width, this.height, 5); // Rounded rectangle
+                ctx.roundRect(this.x, this.y, this.width, this.height, 8); // More rounded corners for obstacles
                 ctx.fill();
 
                 // Simple details for visual distinction
                 if (this.type === OBSTACLE_TRAIN) {
-                    ctx.fillStyle = TEXT_COLOR; // Window color
-                    ctx.fillRect(this.x + 10, this.y + 10, 15, 10);
-                    ctx.fillRect(this.x + this.width - 25, this.y + 10, 15, 10);
+                    // Train windows
+                    ctx.fillStyle = '#cbd5e1'; // Light grey for windows
+                    ctx.fillRect(this.x + 15, this.y + 10, 20, 15);
+                    ctx.fillRect(this.x + this.width - 35, this.y + 10, 20, 15);
+                    // Train wheels
                     ctx.fillStyle = '#4a5568'; // Darker grey for wheels
                     ctx.beginPath();
-                    ctx.arc(this.x + 20, GROUND_Y - 10, 10, 0, Math.PI * 2);
+                    ctx.arc(this.x + 25, GROUND_Y - 15, 12, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.beginPath();
-                    ctx.arc(this.x + this.width - 20, GROUND_Y - 10, 10, 0, Math.PI * 2);
+                    ctx.arc(this.x + this.width - 25, GROUND_Y - 15, 12, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (this.type === OBSTACLE_BRIDGE) {
+                    // Bridge supports
+                    ctx.fillStyle = '#71717a'; // Zinc color for supports
+                    ctx.fillRect(this.x + 10, this.y + this.height, 10, 30);
+                    ctx.fillRect(this.x + this.width - 20, this.y + this.height, 10, 30);
                     ctx.fillStyle = TEXT_COLOR; // Text color
                     ctx.font = '16px Inter';
                     ctx.fillText('Bridge', this.x + 5, this.y + this.height + 20);
@@ -353,60 +356,9 @@
             }
         }
 
-        // --- Patroller Class ---
-        class Patroller {
-            constructor() {
-                this.width = 40;
-                this.height = 60;
-                this.x = PATROLLER_START_OFFSET; // Starts behind player
-                this.y = GROUND_Y - this.height;
-            }
-
-            update(playerSpeed) {
-                // Patroller moves towards the player, relative to scroll speed
-                // It speeds up slightly if it falls too far behind, to ensure it's a threat
-                const chaseSpeed = playerSpeed * PATROLLER_SPEED_FACTOR;
-                const distanceToPlayer = player.x - this.x;
-                if (distanceToPlayer > SCREEN_WIDTH / 2) { // If too far behind, speed up
-                    this.x += chaseSpeed * 1.1;
-                } else {
-                    this.x += chaseSpeed;
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = PATROLLER_COLOR;
-                ctx.beginPath();
-                ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2); // Circle for patroller
-                ctx.fill();
-
-                ctx.fillStyle = STICKMAN_COLOR; // Eyes for patroller
-                ctx.beginPath();
-                ctx.arc(this.x + this.width / 2 - 8, this.y + this.height / 2 - 5, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(this.x + this.width / 2 + 8, this.y + this.height / 2 - 5, 3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = TEXT_COLOR;
-                ctx.font = '14px Inter';
-                ctx.fillText('Patroller', this.x, this.y - 10);
-            }
-
-            getBounds() {
-                return {
-                    x: this.x,
-                    y: this.y,
-                    width: this.width,
-                    height: this.height
-                };
-            }
-        }
-
         // --- Game Functions ---
         function initGame() {
             player = new Player();
-            patroller = new Patroller();
             obstacles = [];
             score = 0;
             distanceRun = 0;
@@ -449,8 +401,12 @@
         function drawGround() {
             ctx.fillStyle = GROUND_COLOR;
             ctx.beginPath();
-            ctx.roundRect(0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_Y, 5); // Ground as a rounded rectangle
+            ctx.roundRect(0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_Y, 8); // Ground as a rounded rectangle
             ctx.fill();
+            // Add a subtle border to the ground
+            ctx.strokeStyle = '#15803d'; /* Darker green border */
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
         function checkCollision(rect1, rect2) {
@@ -507,7 +463,6 @@
 
             // --- Update Game State ---
             player.update();
-            patroller.update(gameSpeed);
             distanceRun += gameSpeed; // Track distance for score/levels
             score = Math.floor(distanceRun / 10); // Score based on distance
 
@@ -542,18 +497,18 @@
                 if (checkCollision(playerBounds, obstacleBounds)) {
                     if (obstacle.type === OBSTACLE_TRAIN) {
                         // Player must jump over or run on top of train
-                        // Check if player is landing on top of the train
                         const playerBottom = playerBounds.y + playerBounds.height;
                         const obstacleTop = obstacleBounds.y;
                         const collisionTolerance = 5; // Pixels to consider "on top"
 
-                        if (player.velY >= 0 && playerBottom >= obstacleTop && playerBottom <= obstacleTop + collisionTolerance) {
-                            // Player is falling and landed on top of the train
+                        if (player.velY >= 0 && playerBottom >= obstacleTop && playerBottom <= obstacleTop + collisionTolerance &&
+                            playerBounds.x + playerBounds.width > obstacleBounds.x + 5 && playerBounds.x < obstacleBounds.x + obstacleBounds.width - 5) {
+                            // Player is falling and landed on top of the train, and is horizontally within the train
                             player.y = obstacleTop - playerBounds.height; // Snap to top of train
                             player.velY = 0; // Stop vertical movement
                             player.isJumping = false; // Player is no longer jumping
-                        } else if (playerBounds.x + playerBounds.width > obstacleBounds.x + 5 && playerBounds.x < obstacleBounds.x + obstacleBounds.width - 5) {
-                            // Player hit the side of the train (not on top)
+                        } else {
+                            // Player hit the side of the train (not on top, or hit while jumping/sliding incorrectly)
                             showGameOver();
                         }
                     } else if (obstacle.type === OBSTACLE_BRIDGE) {
@@ -567,14 +522,6 @@
                 }
             }
 
-            // --- Patroller Collision ---
-            const patrollerBounds = patroller.getBounds();
-            const playerBounds = player.getBounds();
-            // Check if patroller has passed the player's X position
-            if (patrollerBounds.x + patrollerBounds.width > playerBounds.x + 5) { // +5 tolerance
-                showGameOver();
-            }
-
             // --- Drawing ---
             ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Clear canvas
             ctx.fillStyle = SKY_COLOR; // Draw sky background
@@ -582,7 +529,6 @@
 
             drawGround();
             player.draw();
-            patroller.draw();
             obstacles.forEach(obstacle => obstacle.draw());
 
             animationFrameId = requestAnimationFrame(gameLoop); // Continue the loop
