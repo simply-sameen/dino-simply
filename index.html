@@ -3,393 +3,522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dinosaur Jump</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>Train Escape</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Custom CSS for game elements and specific styling not easily done with Tailwind */
         body {
-            margin: 0;
-            overflow: hidden; /* Prevent scrolling */
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f7f7f7;
-            font-family: 'Inter', sans-serif;
-            color: #333;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
         }
 
-
-        .game-container {
+        #gameContainer {
             position: relative;
-            width: 90%; /* Responsive width */
-            max-width: 800px; /* Max width for larger screens */
-            background-color: #fff;
-            border: 4px solid #555;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background-color: #334155; /* Darker background for game area */
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            justify-content: center;
         }
-
 
         canvas {
-            background-color: #e0f7fa; /* Light blue sky */
             display: block;
-            border: 2px solid #aaa;
-            border-radius: 8px;
-            width: 100%; /* Canvas fills its container */
-            height: 200px; /* Fixed height for game area */
-            margin-bottom: 20px;
+            background-color: #64748b; /* Sky blue for game background */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06); /* inset shadow */
+            width: 100%; /* Make canvas responsive within its container */
+            height: 100%;
         }
 
-
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 0 10px;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-
-
-        .score-display, .message-box {
-            background-color: #f0f0f0;
-            padding: 8px 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-
-        .message-box {
+        #gameOverOverlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            z-index: 100;
-            border: 2px solid #555;
+            z-index: 10;
+            border-radius: 1rem;
             display: none; /* Hidden by default */
         }
 
-
-        .message-box h2 {
-            margin-top: 0;
-            color: #e74c3c;
-            font-size: 1.8em;
+        #gameOverOverlay h2 {
+            font-size: 2.5rem; /* text-5xl */
+            font-weight: bold;
+            color: #ef4444; /* red-500 */
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
-
-        .message-box p {
-            font-size: 1.1em;
-            margin-bottom: 20px;
+        #gameOverOverlay p {
+            font-size: 1.25rem; /* text-xl */
+            margin-bottom: 2rem;
         }
 
-
-        .message-box button {
-            background-color: #28a745;
+        #restartButton {
+            padding: 0.75rem 2rem;
+            background-color: #22c55e; /* green-500 */
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1.1em;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-size: 1.125rem; /* text-lg */
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.1s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-
-        .message-box button:hover {
-            background-color: #218838;
+        #restartButton:hover {
+            background-color: #16a34a; /* green-600 */
             transform: translateY(-2px);
         }
 
-
-        .message-box button:active {
+        #restartButton:active {
             transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* Game element styles (simple shapes for now) */
+        .player {
+            background-color: #3b82f6; /* blue-500 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .player.sliding {
+            background-color: #10b981; /* emerald-500 */
+        }
+
+        .train {
+            background-color: #ef4444; /* red-500 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .bridge {
+            background-color: #9ca3af; /* gray-400 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .patroller {
+            background-color: #facc15; /* yellow-400 */
+            border-radius: 50%; /* rounded-full */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-
-        @media (max-width: 600px) {
-            .game-container {
-                width: 95%;
-                padding: 15px;
-            }
-            canvas {
-                height: 180px;
-            }
-            .game-info {
-                font-size: 1em;
-            }
-            .message-box {
-                padding: 20px;
-            }
-            .message-box h2 {
-                font-size: 1.5em;
-            }
-            .message-box button {
-                padding: 10px 20px;
-                font-size: 1em;
-            }
+        .ground {
+            background-color: #4ade80; /* green-400 */
         }
     </style>
 </head>
-<body>
-    <div class="game-container">
-        <div class="game-info">
-            <div class="score-display">Score: <span id="score">0</span></div>
-            <div class="score-display">High Score: <span id="high-score">0</span></div>
+<body class="bg-gray-900 text-white">
+    <div id="gameContainer" class="w-full max-w-2xl h-[400px] md:h-[500px] lg:h-[600px] flex justify-center items-center p-4">
+        <canvas id="gameCanvas" class="w-full h-full"></canvas>
+
+        <div id="gameOverOverlay">
+            <h2>GAME OVER!</h2>
+            <p id="finalScoreText"></p>
+            <button id="restartButton">Restart Game</button>
         </div>
-        <canvas id="gameCanvas"></canvas>
-        <div id="messageBox" class="message-box">
-            <h2 id="messageTitle">Game Over!</h2>
-            <p id="messageText">Your final score was: <span id="finalScore">0</span></p>
-            <button id="restartButton">Play Again</button>
+
+        <div class="absolute top-4 left-4 text-xl font-bold flex flex-col gap-2">
+            <div id="scoreDisplay" class="bg-gray-800 px-4 py-2 rounded-lg shadow-md">Score: 0</div>
+            <div id="levelDisplay" class="bg-gray-800 px-4 py-2 rounded-lg shadow-md">Level: 1</div>
         </div>
     </div>
 
-
     <script>
-        // Get canvas and context
+        // --- Game Setup ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-
-        // Get score and message elements
-        const scoreDisplay = document.getElementById('score');
-        const highScoreDisplay = document.getElementById('high-score');
-        const messageBox = document.getElementById('messageBox');
-        const messageTitle = document.getElementById('messageTitle');
-        const messageText = document.getElementById('messageText');
-        const finalScoreDisplay = document.getElementById('finalScore');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
         const restartButton = document.getElementById('restartButton');
+        const finalScoreText = document.getElementById('finalScoreText');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
 
+        // --- Game Constants (Adjust these values to change difficulty/feel) ---
+        const SCREEN_WIDTH = 800; // Logical width for game calculations
+        const SCREEN_HEIGHT = 400; // Logical height for game calculations
+        const GROUND_Y = SCREEN_HEIGHT - 50; // Where the ground is
 
-        // Game variables
-        let dinosaur = {
-            x: 50,
-            y: 150, // Initial y position (ground level)
-            width: 40,
-            height: 50,
-            velocityY: 0,
-            gravity: 0.6,
-            jumpStrength: -10,
-            isJumping: false,
-            image: new Image()
-        };
+        const PLAYER_RUN_SPEED = 5; // How fast the world scrolls past player
+        const JUMP_STRENGTH = -12;
+        const GRAVITY = 0.6;
+        const SLIDE_DURATION = 30; // Frames for sliding
 
+        const PATROLLER_SPEED_FACTOR = 0.8; // Patroller is slower than player, but relentless
+        const PATROLLER_START_OFFSET = -200; // Patroller starts behind player
 
-        let cacti = [];
+        // Obstacle Types
+        const OBSTACLE_TRAIN = 0;
+        const OBSTACLE_BRIDGE = 1;
+
+        // Level progression
+        const LEVEL_LENGTH_METERS = 1500; // How far to run per level
+        const LEVEL_SPEED_INCREASE = 0.5; // How much faster each new level gets
+
+        // Colors (for drawing simple shapes)
+        const PLAYER_COLOR = '#3b82f6'; // blue-500
+        const PLAYER_SLIDING_COLOR = '#10b981'; // emerald-500
+        const TRAIN_COLOR = '#ef4444'; // red-500
+        const BRIDGE_COLOR = '#9ca3af'; // gray-400
+        const PATROLLER_COLOR = '#facc15'; // yellow-400
+        const GROUND_COLOR = '#4ade80'; // green-400
+        const SKY_COLOR = '#64748b'; // sky blue-500 (game background)
+        const TEXT_COLOR = '#ffffff'; // white
+
+        // --- Game State Variables ---
+        let player;
+        let patroller;
+        let obstacles = [];
         let score = 0;
-        let highScore = localStorage.getItem('dinoHighScore') || 0;
+        let distanceRun = 0;
+        let currentLevel = 1;
+        let gameSpeed = PLAYER_RUN_SPEED;
         let gameOver = false;
-        let frame = 0;
-        let gameSpeed = 3; // Initial speed
+        let animationFrameId; // To store the requestAnimationFrame ID
 
-
-        // --- Embedded Images as Data URIs ---
-        // Dinosaur image (a simple green rectangle SVG)
-        const dinoImageURI = 'data:image/svg+xml;base64,' + btoa('<svg width="40" height="50" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="50" fill="#8bc34a" rx="5" ry="5"/><circle cx="30" cy="15" r="5" fill="#689f38"/><circle cx="10" cy="15" r="5" fill="#689f38"/><rect x="10" y="30" width="20" height="10" fill="#689f38" rx="2" ry="2"/></svg>');
-        dinosaur.image.src = dinoImageURI;
-
-
-        // Cactus image (a simple green cactus-like SVG)
-        const cactusImageURI = 'data:image/svg+xml;base64,' + btoa('<svg width="20" height="40" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="0" width="6" height="40" fill="#4caf50" rx="3" ry="3"/><rect x="0" y="15" width="10" height="6" fill="#4caf50" rx="3" ry="3"/><rect x="10" y="25" width="10" height="6" fill="#4caf50" rx="3" ry="3"/></svg>');
-        const cactusImage = new Image();
-        cactusImage.src = cactusImageURI;
-        // --- End Embedded Images ---
-
-
-        // Update high score display
-        highScoreDisplay.textContent = highScore;
-
-
-        // Resize canvas on window resize
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth; // Set canvas drawing buffer to its CSS width
-            // Redraw everything if needed, though for this simple game, it's handled by the game loop
-        }
-
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas(); // Initial resize
-
-
-        // Draw dinosaur
-        function drawDinosaur() {
-            ctx.drawImage(dinosaur.image, dinosaur.x, dinosaur.y, dinosaur.width, dinosaur.height);
-        }
-
-
-        // Draw cactus
-        function drawCactus(cactus) {
-            ctx.drawImage(cactusImage, cactus.x, cactus.y, cactus.width, cactus.height);
-        }
-
-
-        // Generate new cactus
-        function generateCactus() {
-            const cactusWidth = 20 + Math.random() * 10; // Random width
-            const cactusHeight = 30 + Math.random() * 20; // Random height
-            cacti.push({
-                x: canvas.width,
-                y: canvas.height - cactusHeight - 10, // Position on the ground
-                width: cactusWidth,
-                height: cactusHeight
-            });
-        }
-
-
-        // Update game state
-        function update() {
-            if (gameOver) return;
-
-
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-
-            // Update dinosaur position
-            dinosaur.velocityY += dinosaur.gravity;
-            dinosaur.y += dinosaur.velocityY;
-
-
-            // Prevent dinosaur from falling through the ground
-            const groundLevel = canvas.height - dinosaur.height - 10; // 10px above bottom for ground line
-            if (dinosaur.y >= groundLevel) {
-                dinosaur.y = groundLevel;
-                dinosaur.velocityY = 0;
-                dinosaur.isJumping = false;
+        // --- Player Class ---
+        class Player {
+            constructor() {
+                this.width = 30;
+                this.height = 50;
+                this.x = SCREEN_WIDTH / 4; // Player's X position (stays fixed on screen)
+                this.y = GROUND_Y - this.height;
+                this.velY = 0;
+                this.isJumping = false;
+                this.isSliding = false;
+                this.slideTimer = 0;
+                this.originalHeight = this.height;
             }
 
+            update() {
+                if (this.isSliding) {
+                    this.slideTimer--;
+                    if (this.slideTimer <= 0) {
+                        this.isSliding = false;
+                        this.height = this.originalHeight; // Restore height
+                    }
+                }
 
-            // Draw ground line
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - 10);
-            ctx.lineTo(canvas.width, canvas.height - 10);
-            ctx.strokeStyle = '#888';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+                // Apply gravity
+                this.velY += GRAVITY;
+                this.y += this.velY;
 
-
-            // Update cacti
-            for (let i = 0; i < cacti.length; i++) {
-                cacti[i].x -= gameSpeed;
-                drawCactus(cacti[i]);
-
-
-                // Collision detection
-                if (
-                    dinosaur.x < cacti[i].x + cacti[i].width &&
-                    dinosaur.x + dinosaur.width > cacti[i].x &&
-                    dinosaur.y < cacti[i].y + cacti[i].height &&
-                    dinosaur.y + dinosaur.height > cacti[i].y
-                ) {
-                    endGame();
-                    return; // Stop updating after collision
+                // Ground collision
+                if (this.y >= GROUND_Y - this.height) {
+                    this.y = GROUND_Y - this.height;
+                    this.velY = 0;
+                    this.isJumping = false;
                 }
             }
 
-
-            // Remove off-screen cacti
-            cacti = cacti.filter(cactus => cactus.x + cactus.width > 0);
-
-
-            // Generate new cactus periodically
-            frame++;
-            if (frame % 150 === 0) { // Adjust for cactus frequency
-                generateCactus();
+            jump() {
+                if (!this.isJumping && !this.isSliding) {
+                    this.velY = JUMP_STRENGTH;
+                    this.isJumping = true;
+                }
             }
 
-
-            // Increase score and game speed
-            score++;
-            scoreDisplay.textContent = Math.floor(score / 10); // Display score in simpler units
-            if (score % 500 === 0) { // Increase speed every 500 frames
-                gameSpeed += 0.5;
+            slide() {
+                if (!this.isSliding && !this.isJumping) {
+                    this.isSliding = true;
+                    this.slideTimer = SLIDE_DURATION;
+                    this.height = this.originalHeight / 2; // Half height for sliding
+                }
             }
 
+            draw() {
+                ctx.fillStyle = this.isSliding ? PLAYER_SLIDING_COLOR : PLAYER_COLOR;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 5); // Rounded rectangle
+                ctx.fill();
+            }
 
-            drawDinosaur();
-
-
-            requestAnimationFrame(update);
-        }
-
-
-        // Handle jump
-        function jump() {
-            if (!dinosaur.isJumping && !gameOver) {
-                dinosaur.velocityY = dinosaur.jumpStrength;
-                dinosaur.isJumping = true;
-            } else if (gameOver) {
-                // If game is over, jump acts as restart
-                resetGame();
+            getBounds() {
+                return {
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
             }
         }
 
+        // --- Obstacle Class ---
+        class Obstacle {
+            constructor(type, x) {
+                this.type = type;
+                this.x = x;
+                if (this.type === OBSTACLE_TRAIN) {
+                    this.width = 60;
+                    this.height = 70;
+                    this.y = GROUND_Y - this.height;
+                } else if (this.type === OBSTACLE_BRIDGE) {
+                    this.width = 80;
+                    this.height = 40; // Height of the bridge structure
+                    this.y = GROUND_Y - 90; // Y position for the top of the bridge/overhang
+                }
+            }
 
-        // Event listener for spacebar or click
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                jump();
+            update(scrollSpeed) {
+                this.x -= scrollSpeed;
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === OBSTACLE_TRAIN ? TRAIN_COLOR : BRIDGE_COLOR;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 5); // Rounded rectangle
+                ctx.fill();
+
+                // Simple details for visual distinction
+                if (this.type === OBSTACLE_TRAIN) {
+                    ctx.fillStyle = TEXT_COLOR; // Window color
+                    ctx.fillRect(this.x + 10, this.y + 10, 15, 10);
+                } else if (this.type === OBSTACLE_BRIDGE) {
+                    ctx.fillStyle = TEXT_COLOR; // Text color
+                    ctx.font = '16px Inter';
+                    ctx.fillText('Bridge', this.x + 5, this.y + this.height + 20);
+                }
+            }
+
+            getBounds() {
+                return {
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
+            }
+        }
+
+        // --- Patroller Class ---
+        class Patroller {
+            constructor() {
+                this.width = 40;
+                this.height = 60;
+                this.x = PATROLLER_START_OFFSET; // Starts behind player
+                this.y = GROUND_Y - this.height;
+            }
+
+            update(playerSpeed) {
+                // Patroller moves towards the player, relative to scroll speed
+                this.x += playerSpeed * PATROLLER_SPEED_FACTOR;
+            }
+
+            draw() {
+                ctx.fillStyle = PATROLLER_COLOR;
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2); // Circle for patroller
+                ctx.fill();
+
+                ctx.fillStyle = TEXT_COLOR;
+                ctx.font = '14px Inter';
+                ctx.fillText('Patroller', this.x, this.y - 10);
+            }
+
+            getBounds() {
+                return {
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
+            }
+        }
+
+        // --- Game Functions ---
+        function initGame() {
+            player = new Player();
+            patroller = new Patroller();
+            obstacles = [];
+            score = 0;
+            distanceRun = 0;
+            currentLevel = 1;
+            gameSpeed = PLAYER_RUN_SPEED;
+            gameOver = false;
+
+            gameOverOverlay.style.display = 'none';
+            scoreDisplay.textContent = `Score: ${score}`;
+            levelDisplay.textContent = `Level: ${currentLevel}`;
+
+            // Ensure canvas size is set correctly on init and resize
+            resizeCanvas();
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId); // Stop any previous loop
+            }
+            gameLoop(); // Start the game loop
+        }
+
+        function resizeCanvas() {
+            // Set canvas dimensions based on logical game size
+            canvas.width = SCREEN_WIDTH;
+            canvas.height = SCREEN_HEIGHT;
+
+            // Scale canvas to fit container while maintaining aspect ratio
+            const container = document.getElementById('gameContainer');
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            let scale = Math.min(containerWidth / SCREEN_WIDTH, containerHeight / SCREEN_HEIGHT);
+            canvas.style.width = `${SCREEN_WIDTH * scale}px`;
+            canvas.style.height = `${SCREEN_HEIGHT * scale}px`;
+        }
+
+        function generateObstacle() {
+            // Only generate if there's space and not too many obstacles
+            if (obstacles.length < 3 && (!obstacles.length || (SCREEN_WIDTH - obstacles[obstacles.length - 1].x > randomRange(200, 400)))) {
+                const type = randomRange(0, 1) === 0 ? OBSTACLE_TRAIN : OBSTACLE_BRIDGE;
+                obstacles.push(new Obstacle(type, SCREEN_WIDTH)); // Spawn off-screen right
+            }
+        }
+
+        function drawGround() {
+            ctx.fillStyle = GROUND_COLOR;
+            ctx.beginPath();
+            ctx.roundRect(0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_Y, 5); // Ground as a rounded rectangle
+            ctx.fill();
+        }
+
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function randomRange(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function showGameOver() {
+            gameOver = true;
+            finalScoreText.textContent = `Your Score: ${score}`;
+            gameOverOverlay.style.display = 'flex';
+            cancelAnimationFrame(animationFrameId); // Stop the game loop
+        }
+
+        // --- Main Game Loop ---
+        function gameLoop() {
+            if (gameOver) {
+                return; // Stop loop if game is over
+            }
+
+            // --- Update Game State ---
+            player.update();
+            patroller.update(gameSpeed);
+            distanceRun += gameSpeed; // Track distance for score/levels
+            score = Math.floor(distanceRun / 10); // Score based on distance
+
+            // Update score and level display
+            scoreDisplay.textContent = `Score: ${score}`;
+
+            // Level Progression
+            if (distanceRun >= currentLevel * LEVEL_LENGTH_METERS) {
+                currentLevel++;
+                gameSpeed += LEVEL_SPEED_INCREASE;
+                levelDisplay.textContent = `Level: ${currentLevel}`;
+                console.log(`LEVEL UP! Current Level: ${currentLevel}, Speed: ${gameSpeed.toFixed(1)}`);
+            }
+
+            // Generate obstacles
+            if (randomRange(0, 100) < 3) { // Small chance to generate new obstacle per frame
+                generate_obstacle();
+            }
+
+            // Update and filter obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                obstacle.update(gameSpeed);
+
+                if (obstacle.x + obstacle.width < 0) { // Remove off-screen obstacles
+                    obstacles.splice(i, 1);
+                }
+
+                // --- Collision Detection ---
+                const playerBounds = player.getBounds();
+                const obstacleBounds = obstacle.getBounds();
+
+                if (checkCollision(playerBounds, obstacleBounds)) {
+                    if (obstacle.type === OBSTACLE_TRAIN) {
+                        // Player must jump over train
+                        // If player's bottom is below the train's top (meaning they didn't jump high enough)
+                        // Or if player is sliding and hits a train (sliding doesn't help with trains)
+                        if (playerBounds.y + playerBounds.height > obstacleBounds.y + 10 && !player.isJumping) { // +10 to allow for slight overlap
+                            showGameOver();
+                        }
+                    } else if (obstacle.type === OBSTACLE_BRIDGE) {
+                        // Player must slide under bridge
+                        // If player's head is above the bridge's bottom (meaning they didn't slide low enough)
+                        // and they are not sliding or not low enough
+                        if (!player.isSliding && playerBounds.y < obstacleBounds.y + obstacleBounds.height - 5) { // -5 for slight tolerance
+                            showGameOver();
+                        }
+                    }
+                }
+            }
+
+            // --- Patroller Collision ---
+            const patrollerBounds = patroller.getBounds();
+            const playerBounds = player.getBounds();
+            if (playerBounds.x <= patrollerBounds.x + patrollerBounds.width - 10) { // If patroller overlaps player from left
+                showGameOver();
+            }
+
+            // --- Drawing ---
+            ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Clear canvas
+            ctx.fillStyle = SKY_COLOR; // Draw sky background
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            drawGround();
+            player.draw();
+            patroller.draw();
+            obstacles.forEach(obstacle => obstacle.draw());
+
+            animationFrameId = requestAnimationFrame(gameLoop); // Continue the loop
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('keydown', (event) => {
+            if (gameOver) {
+                if (event.code === 'Space') {
+                    initGame(); // Restart on spacebar if game over
+                }
+                return;
+            }
+
+            if (event.code === 'Space') {
+                player.jump();
+            } else if (event.code === 'ArrowDown') {
+                player.slide();
             }
         });
-        canvas.addEventListener('click', jump); // Allow click to jump on mobile
 
+        // Handle window resize for responsiveness
+        window.addEventListener('resize', resizeCanvas);
 
-        // End game function
-        function endGame() {
-            gameOver = true;
-            if (Math.floor(score / 10) > highScore) {
-                highScore = Math.floor(score / 10);
-                localStorage.setItem('dinoHighScore', highScore);
-                highScoreDisplay.textContent = highScore;
-                messageTitle.textContent = "New High Score!";
-            } else {
-                messageTitle.textContent = "Game Over!";
-            }
-            finalScoreDisplay.textContent = Math.floor(score / 10);
-            messageBox.style.display = 'block';
-        }
-
-
-        // Reset game function
-        function resetGame() {
-            gameOver = false;
-            dinosaur.y = 150;
-            dinosaur.velocityY = 0;
-            dinosaur.isJumping = false;
-            cacti = [];
-            score = 0;
-            frame = 0;
-            gameSpeed = 3;
-            scoreDisplay.textContent = 0;
-            messageBox.style.display = 'none';
-            requestAnimationFrame(update); // Start the game loop again
-        }
-
-
-        // Restart button listener
-        restartButton.addEventListener('click', resetGame);
-
-
-        // Start the game loop on window load
-        window.onload = function () {
-            requestAnimationFrame(update);
+        // --- Start the Game when the window loads ---
+        window.onload = function() {
+            initGame();
         };
+
+        restartButton.addEventListener('click', initGame);
+
     </script>
 </body>
 </html>
