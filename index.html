@@ -504,21 +504,25 @@
                         const collisionTolerance = 8; // Vertical tolerance for landing on top
 
                         // Check if player was above the train in the previous frame and is now hitting its top
-                        const wasAboveLastFrame = player.prevY + player.height <= obstacleTop + collisionTolerance;
+                        const wasAboveLastFrame = player.prevY + player.originalHeight <= obstacleTop + collisionTolerance;
                         const isFalling = player.velY >= 0;
                         const isHorizontallyAligned = (
                             playerBounds.x + playerBounds.width > obstacleBounds.x + 5 && // Player is past train's left edge (horizontally)
                             playerBounds.x < obstacleBounds.x + obstacleBounds.width - 5 // Player is before train's right edge (horizontally)
                         );
 
+                        // If player is landing on top of the train
                         if (isFalling && wasAboveLastFrame && isHorizontallyAligned) {
-                            // Player is landing on top of the train
                             player.y = obstacleTop - playerBounds.height; // Snap to top
                             player.velY = 0;
                             player.isJumping = false;
-                        } else {
-                            // If it's a collision, but NOT a top landing, then it's a fatal hit (side, front, falling through)
-                            // This condition ensures game over only triggers if player hits side/front, not when jumping off.
+                        } else if (player.velY < 0) {
+                            // Player is moving upwards (jumping off the train).
+                            // This is a safe state, do nothing (don't trigger game over).
+                            // We only care about collisions when moving downwards or horizontally into the train.
+                        }
+                        else {
+                            // If it's a collision, but NOT a top landing, and not jumping upwards, then it's a fatal hit (side, front, falling through)
                             showGameOver();
                         }
                     } else if (obstacle.type === OBSTACLE_BRIDGE) {
